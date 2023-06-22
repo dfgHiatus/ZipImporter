@@ -54,6 +54,9 @@ public class Unzipper : NeosMod
     [AutoRegisterConfigKey]
     public static readonly ModConfigurationKey<bool> importVideo =
         new("importVideo", "Import Videos", () => true);
+    [AutoRegisterConfigKey]
+    public static readonly ModConfigurationKey<bool> importUnknown =
+        new("importUnknown", "Import Videos", () => true);
 
     internal static HashSet<string> SupportedZippedFiles = new()
     {
@@ -154,6 +157,7 @@ public class Unzipper : NeosMod
             || (config.GetValue(importAudio) && assetClass == AssetClass.Audio)
             || (config.GetValue(importFont) && assetClass == AssetClass.Font)
             || (config.GetValue(importVideo) && assetClass == AssetClass.Video)
+            || (config.GetValue(importUnknown) && assetClass == AssetClass.Unknown)
             || (config.GetValue(importMesh) && assetClass == AssetClass.Model && extension != ".xml")   // Handle an edge case where assimp will try to import .xml files as 3D models. Handle recursive imports below
             || SupportedZippedFiles.Contains(extension);
             // || SupportedTarFiles.Contains(extension)
