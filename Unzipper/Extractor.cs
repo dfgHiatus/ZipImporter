@@ -1,8 +1,7 @@
-﻿using BaseX;
+﻿using Elements.Core;
 using System;
 using System.IO;
 using System.IO.Compression;
-// using TarExtractor;
 
 namespace Unzipper;
 
@@ -14,18 +13,10 @@ public class Extractor
 
         try
         {
-            if (Unzipper.SupportedZippedFiles.Contains(extension))
+            if (extension == Unzipper.ZIP_FILE_EXTENSION)
             {
                 ZipFile.ExtractToDirectory(input, outputDir);
             }
-            //else if (Unzipper.SupportedTarFiles.Contains(extension)) 
-            //{ 
-            //    Tar.ExtractTar(input, outputDir);
-            //}
-            //else if (Unzipper.SupportedTarGZFiles.Contains(extension))
-            //{
-            //    Tar.ExtractTarGz(input, outputDir);
-            //}
         }
         catch (Exception e)
         {

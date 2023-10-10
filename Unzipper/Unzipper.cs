@@ -1,34 +1,27 @@
-﻿using BaseX;
+﻿using Elements.Assets;
+using Elements.Core;
 using FrooxEngine;
 using HarmonyLib;
-using NeosModLoader;
+using ResoniteModLoader;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System;
-using CodeX;
 
 namespace Unzipper;
 
-public class Unzipper : NeosMod
+public class Unzipper : ResoniteMod
 {
     public override string Name => "Unzipper";
     public override string Author => "dfgHiatus";
-    public override string Version => "1.0.0";
+    public override string Version => "2.0.0";
     public override string Link => "https://github.com/dfgHiatus/Unzipper/";
-
-    public override void DefineConfiguration(ModConfigurationDefinitionBuilder builder)
-    {
-        builder
-            .Version(new Version(1, 0, 0))
-            .AutoSave(true);
-    }
 
     [AutoRegisterConfigKey]
     private static readonly ModConfigurationKey<bool> importAsRawFiles =
         new("importAsRawFiles",
-        "Import files into Neos as raw files",
+        "Import files into Resonite as raw files",
         () => false);
     [AutoRegisterConfigKey]
     private static readonly ModConfigurationKey<bool> importText =
@@ -58,29 +51,16 @@ public class Unzipper : NeosMod
     public static readonly ModConfigurationKey<bool> importUnknown =
         new("importUnknown", "Import Videos", () => true);
 
-    internal static HashSet<string> SupportedZippedFiles = new()
-    {
-        ".zip"
-    };
-
-    //internal static HashSet<string> SupportedTarFiles = new()
-    //{
-    //    ".tar"
-    //};
-
-    //internal static HashSet<string> SupportedTarGZFiles = new()
-    //{
-    //    ".gz", ".tgz", // ".xz", ".txz", ".bz2", ".tbz2", ".tbz", ".lzma", ".tlz",
-    //};
+    internal const string ZIP_FILE_EXTENSION = ".zip";
 
     private static ModConfiguration config;
-    private static string cachePath = Path.Combine(Engine.Current.CachePath, "Cache", "DecompressedZippedFiles");
+    private static readonly string CachePath = Path.Combine(Engine.Current.CachePath, "Cache", "DecompressedZippedFiles");
 
     public override void OnEngineInit()
     {
         new Harmony("net.dfgHiatus.Unzipper").PatchAll();
         config = GetConfiguration();
-        Directory.CreateDirectory(cachePath);
+        Directory.CreateDirectory(CachePath);
     }
 
     public static string[] DecomposeZippedFile(string[] files)
@@ -90,7 +70,7 @@ public class Unzipper : NeosMod
         HashSet<string> zippedFilesToDecompress = new();
         foreach (var element in fileToHash)
         {
-            var dir = Path.Combine(cachePath, element.Value);
+            var dir = Path.Combine(CachePath, element.Value);
             if (!Directory.Exists(dir))
                 zippedFilesToDecompress.Add(element.Key);
             else
@@ -104,7 +84,7 @@ public class Unzipper : NeosMod
                 Error("Imported zip file cannot have Unicode characters in its file name.");
                 continue;
             }
-            var extractedPath = Path.Combine(cachePath, fileToHash[package]);
+            var extractedPath = Path.Combine(CachePath, fileToHash[package]);
             Extractor.Unpack(package, extractedPath);
             dirsToImport.Add(extractedPath);
         }
@@ -123,9 +103,7 @@ public class Unzipper : NeosMod
             foreach (var file in files)
             {
                 var extension = Path.GetExtension(file).ToLower();
-                if (SupportedZippedFiles.Contains(extension))
-                    // || SupportedTarFiles.Contains(extension) 
-                    // || SupportedTarGZFiles.Contains(extension))
+                if (extension == ZIP_FILE_EXTENSION)
                     hasZippedFile.Add(file);
                 else
                     notZippedFile.Add(file);
@@ -159,9 +137,7 @@ public class Unzipper : NeosMod
             || (config.GetValue(importVideo) && assetClass == AssetClass.Video)
             || (config.GetValue(importUnknown) && assetClass == AssetClass.Unknown)
             || (config.GetValue(importMesh) && assetClass == AssetClass.Model && extension != ".xml")   // Handle an edge case where assimp will try to import .xml files as 3D models. Handle recursive imports below
-            || SupportedZippedFiles.Contains(extension);
-            // || SupportedTarFiles.Contains(extension)
-            // || SupportedTarGZFiles.Contains(extension);                                              
+            || extension == ZIP_FILE_EXTENSION;                                       
     }
 
     private static bool ContainsUnicodeCharacter(string input)
