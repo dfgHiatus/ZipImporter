@@ -1,28 +1,30 @@
 ﻿using Elements.Assets;
 using Elements.Core;
 using FrooxEngine;
+using FrooxEngine.ProtoFlux;
 using HarmonyLib;
 using ResoniteModLoader;
+using SkyFrost.Base;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 
-namespace Unzipper;
+namespace ZipImporter;
 
-public class Unzipper : ResoniteMod
+public class ZipImporter : ResoniteMod
 {
-    public override string Name => "Unzipper";
+    public override string Name => "ZipImporter";
     public override string Author => "dfgHiatus";
     public override string Version => "2.0.0";
-    public override string Link => "https://github.com/dfgHiatus/Unzipper/";
+    public override string Link => "https://github.com/dfgHiatus/ZipImporter/";
 
     [AutoRegisterConfigKey]
-    private static readonly ModConfigurationKey<bool> importAsRawFiles =
-        new("importAsRawFiles",
-        "Import files into Resonite as raw files",
-        () => false);
+    private static readonly ModConfigurationKey<bool> enabled =
+        new("importAsRawFiles", "Enable", () => true);
     [AutoRegisterConfigKey]
     private static readonly ModConfigurationKey<bool> importText =
         new("importText", "Import Text", () => true);
@@ -54,18 +56,22 @@ public class Unzipper : ResoniteMod
     internal const string ZIP_FILE_EXTENSION = ".zip";
 
     private static ModConfiguration config;
-    private static readonly string CachePath = Path.Combine(Engine.Current.CachePath, "Cache", "DecompressedZippedFiles");
+    private static readonly string CachePath = Path.Combine(
+        Engine.Current.CachePath, 
+        "Cache", 
+        "DecompressedZippedFiles");
 
     public override void OnEngineInit()
     {
-        new Harmony("net.dfgHiatus.Unzipper").PatchAll();
+        new Harmony("net.dfgHiatus.ZipImporter").PatchAll();
         config = GetConfiguration();
         Directory.CreateDirectory(CachePath);
     }
 
-    public static string[] DecomposeZippedFile(string[] files)
+    public static async Task<string[]> ExtractZippedFile(string[] zipFiles, ProgressBarInterface pbi)
     {
-        var fileToHash = files.ToDictionary(file => file, GenerateMD5);
+        await default(ToBackground);
+        var fileToHash = zipFiles.ToDictionary(file => file, GenerateMD5);
         HashSet<string> dirsToImport = new();
         HashSet<string> zippedFilesToDecompress = new();
         foreach (var element in fileToHash)
@@ -76,17 +82,35 @@ public class Unzipper : ResoniteMod
             else
                 dirsToImport.Add(dir);
         }
+        int counter = 0;
         foreach (var package in zippedFilesToDecompress)
         {
             var modelName = Path.GetFileNameWithoutExtension(package);
             if (ContainsUnicodeCharacter(modelName))
             {
-                Error("Imported zip file cannot have Unicode characters in its file name.");
+                var msg = "Imported zip file cannot have Unicode characters in its file name.";
+
+                await default(ToWorld);
+                pbi.ProgressFail(msg);
+                pbi.Slot.RunInSeconds(2.5f, delegate
+                {
+                    pbi.Slot.Destroy();
+                });
+                await default(ToBackground);
+
+                Error(msg);
                 continue;
             }
+
+            pbi.UpdateProgress(
+                counter / zippedFilesToDecompress.Count, 
+                $"Extracting {counter} out of {zippedFilesToDecompress.Count} files", 
+                package);
+
             var extractedPath = Path.Combine(CachePath, fileToHash[package]);
-            Extractor.Unpack(package, extractedPath);
+            ZipFile.ExtractToDirectory(package, extractedPath);
             dirsToImport.Add(extractedPath);
+            counter++;
         }
         return dirsToImport.ToArray();
     }
@@ -96,8 +120,10 @@ public class Unzipper : ResoniteMod
         typeof(World), typeof(float3), typeof(floatQ), typeof(bool))]
     public class UniversalImporterPatch
     {
-        static bool Prefix(ref IEnumerable<string> files)
+        static bool Prefix(IEnumerable<string> files)
         {
+            if (!config.GetValue(enabled)) return true;
+
             List<string> hasZippedFile = new();
             List<string> notZippedFile = new();
             foreach (var file in files)
@@ -109,14 +135,34 @@ public class Unzipper : ResoniteMod
                     notZippedFile.Add(file);
             }
 
-            List<string> allDirectoriesToBatchImport = new();
-            foreach (var dir in DecomposeZippedFile(hasZippedFile.ToArray()))
-                allDirectoriesToBatchImport.AddRange(Directory.GetFiles(dir, "*", SearchOption.AllDirectories)
-                    .Where(ShouldImportFile).ToArray());
+            var root = Engine.Current.WorldManager.FocusedWorld.RootSlot;
+            root.StartGlobalTask(async delegate
+            {
+                ProgressBarInterface pbi = await root.World.
+                    AddSlot("Import Indicator").
+                    SpawnEntity<ProgressBarInterface, LegacySegmentCircleProgress>
+                    (FavoriteEntity.ProgressBar);
+                pbi.Slot.PositionInFrontOfUser();
+                pbi.Initialize(canBeHidden: true);
+                pbi.UpdateProgress(0.0f, "Detected Zip(s)! Starting extract...", string.Empty);
 
-            var slot = Engine.Current.WorldManager.FocusedWorld.AddSlot("Zipped file import");
-            slot.PositionInFrontOfUser();
-            BatchFolderImporter.BatchImport(slot, allDirectoriesToBatchImport, config.GetValue(importAsRawFiles));
+                await default(ToBackground);
+                List<string> allDirectoriesToBatchImport = new();
+                foreach (var dir in await ExtractZippedFile(hasZippedFile.ToArray(), pbi))
+                    allDirectoriesToBatchImport.AddRange(Directory.GetFiles(dir, "*", SearchOption.AllDirectories)
+                        .Where(ShouldImportFile).ToArray());
+                await default(ToWorld);
+
+                pbi.ProgressDone("Extract complete!");
+                pbi.Slot.RunInSeconds(2.5f, delegate
+                {
+                    pbi.Slot.Destroy();
+                });
+
+                var slot = Engine.Current.WorldManager.FocusedWorld.AddSlot("Zip File import");
+                slot.PositionInFrontOfUser();
+                BatchFolderImporter.BatchImport(slot, allDirectoriesToBatchImport);
+            });
 
             if (notZippedFile.Count <= 0) return false;
             files = notZippedFile.ToArray();

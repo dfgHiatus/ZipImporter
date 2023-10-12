@@ -7,8 +7,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Unzipper</RootNamespace>
-    <AssemblyName>Unzipper</AssemblyName>
+    <RootNamespace>ZipImporter</RootNamespace>
+    <AssemblyName>ZipImporter</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -48,12 +48,15 @@
     <Reference Include="ResoniteModLoader">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Resonite\Libraries\ResoniteModLoader.dll</HintPath>
     </Reference>
+    <Reference Include="SkyFrost.Base, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Resonite\Resonite_Data\Managed\SkyFrost.Base.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extractor.cs" />
-    <Compile Include="Unzipper.cs" />
+    <Compile Include="ZipImporter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
