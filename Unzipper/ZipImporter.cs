@@ -32,22 +32,22 @@ public class ZipImporter : ResoniteMod
     private static readonly ModConfigurationKey<bool> importTexture =
         new("importTexture", "Import Textures", () => true);
     [AutoRegisterConfigKey]
-    private static readonly ModConfigurationKey<bool> importDocument =
+    private static readonly ModConfigurationKey<bool> importDocuments =
         new("importDocument", "Import Documents", () => true);
     [AutoRegisterConfigKey]
-    private static readonly ModConfigurationKey<bool> importMesh =
+    private static readonly ModConfigurationKey<bool> importMeshes =
         new("importMesh", "Import Meshes", () => true);
     [AutoRegisterConfigKey]
-    private static readonly ModConfigurationKey<bool> importPointCloud =
+    private static readonly ModConfigurationKey<bool> importPointClouds =
         new("importPointCloud", "Import Point Clouds", () => true);
     [AutoRegisterConfigKey]
     private static readonly ModConfigurationKey<bool> importAudio =
         new("importAudio", "Import Audio", () => true);
     [AutoRegisterConfigKey]
-    public static readonly ModConfigurationKey<bool> importFont =
+    public static readonly ModConfigurationKey<bool> importFonts =
         new("importFont", "Import Fonts", () => true);
     [AutoRegisterConfigKey]
-    public static readonly ModConfigurationKey<bool> importVideo =
+    public static readonly ModConfigurationKey<bool> importVideos =
         new("importVideo", "Import Videos", () => true);
     [AutoRegisterConfigKey]
     public static readonly ModConfigurationKey<bool> importUnknown =
@@ -176,13 +176,13 @@ public class ZipImporter : ResoniteMod
         var assetClass = AssetHelper.ClassifyExtension(Path.GetExtension(file));
         return (config.GetValue(importText) && assetClass == AssetClass.Text)
             || (config.GetValue(importTexture) && assetClass == AssetClass.Texture)
-            || (config.GetValue(importDocument) && assetClass == AssetClass.Document)
-            || (config.GetValue(importPointCloud) && assetClass == AssetClass.PointCloud)
+            || (config.GetValue(importDocuments) && assetClass == AssetClass.Document)
+            || (config.GetValue(importPointClouds) && assetClass == AssetClass.PointCloud)
             || (config.GetValue(importAudio) && assetClass == AssetClass.Audio)
-            || (config.GetValue(importFont) && assetClass == AssetClass.Font)
-            || (config.GetValue(importVideo) && assetClass == AssetClass.Video)
+            || (config.GetValue(importFonts) && assetClass == AssetClass.Font)
+            || (config.GetValue(importVideos) && assetClass == AssetClass.Video)
             || (config.GetValue(importUnknown) && assetClass == AssetClass.Unknown)
-            || (config.GetValue(importMesh) && assetClass == AssetClass.Model && extension != ".xml")   // Handle an edge case where assimp will try to import .xml files as 3D models. Handle recursive imports below
+            || (config.GetValue(importMeshes) && assetClass == AssetClass.Model && extension != ".xml")   // Handle an edge case where assimp will try to import .xml files as 3D models. Handle recursive imports below
             || extension == ZIP_FILE_EXTENSION;                                       
     }
 
