@@ -82,7 +82,7 @@ public class ZipImporter : ResoniteMod
             else
                 dirsToImport.Add(dir);
         }
-        int counter = 0;
+        int counter = 1;
         foreach (var package in zippedFilesToDecompress)
         {
             var modelName = Path.GetFileNameWithoutExtension(package);
