@@ -1,7 +1,6 @@
 ﻿using Elements.Assets;
 using Elements.Core;
 using FrooxEngine;
-using FrooxEngine.ProtoFlux;
 using HarmonyLib;
 using ResoniteModLoader;
 using SkyFrost.Base;
@@ -19,7 +18,7 @@ public class ZipImporter : ResoniteMod
 {
     public override string Name => "ZipImporter";
     public override string Author => "dfgHiatus";
-    public override string Version => "2.0.0";
+    public override string Version => "2.0.1";
     public override string Link => "https://github.com/dfgHiatus/ZipImporter/";
 
     [AutoRegisterConfigKey]
