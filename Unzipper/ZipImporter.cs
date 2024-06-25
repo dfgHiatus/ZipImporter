@@ -18,7 +18,7 @@ public class ZipImporter : ResoniteMod
 {
     public override string Name => "ZipImporter";
     public override string Author => "dfgHiatus";
-    public override string Version => "2.0.1";
+    public override string Version => "2.1.0";
     public override string Link => "https://github.com/dfgHiatus/ZipImporter/";
 
     [AutoRegisterConfigKey]
