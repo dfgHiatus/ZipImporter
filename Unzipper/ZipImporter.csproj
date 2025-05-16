@@ -1,73 +1,65 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <LangVersion>10</LangVersion>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ZipImporter</RootNamespace>
-    <AssemblyName>ZipImporter</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
-    <ProjectGuid>{0322B2EF-7452-479D-BAE2-FCAB75033337}</ProjectGuid>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Resonite\rml_libs\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="Elements.Core">
-      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Resonite\Resonite_Data\Managed\Elements.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Elements.Assets">
-      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Resonite\Resonite_Data\Managed\Elements.Assets.dll</HintPath>
-    </Reference>
-    <Reference Include="FrooxEngine">
-      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Resonite\Resonite_Data\Managed\FrooxEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="ResoniteModLoader">
-      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Resonite\Libraries\ResoniteModLoader.dll</HintPath>
-    </Reference>
-    <Reference Include="SkyFrost.Base, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Resonite\Resonite_Data\Managed\SkyFrost.Base.dll</HintPath>
-    </Reference>
-    <Reference Include="SkyFrost.Base.Models, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Resonite\Resonite_Data\Managed\SkyFrost.Base.Models.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.IO.Compression.FileSystem" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="ZipImporter.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetDir)\$(TargetFileName)" "C:\Program Files (x86)\Steam\steamapps\common\Resonite\rml_mods\"</PostBuildEvent>
-  </PropertyGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<RootNamespace>ZipImporter</RootNamespace>
+		<AssemblyName>ZipImporter</AssemblyName>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<TargetFramework>net472</TargetFramework>
+		<FileAlignment>512</FileAlignment>
+		<LangVersion>10.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<Deterministic>true</Deterministic>
+		<!-- Change CopyToMods to true if you'd like builds to be moved into the Mods folder automatically-->
+		<CopyToMods Condition="'$(CopyToMods)'==''">true</CopyToMods>
+		<DebugType Condition="'$(Configuration)'=='Debug'">embedded</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(ResonitePath)'==''">
+		<!-- If you don't want to provide a ResonitePath in dotnet build, you can specify one here -->
+		<ResonitePath>$(MSBuildThisFileDirectory)Resonite/</ResonitePath>
+		<ResonitePath Condition="Exists('C:\Program Files (x86)\Steam\steamapps\common\Resonite\')">C:\Program Files (x86)\Steam\steamapps\common\Resonite\</ResonitePath>
+		<ResonitePath Condition="Exists('$(HOME)/.steam/steam/steamapps/common/Resonite/')">$(HOME)/.steam/steam/steamapps/common/Resonite/</ResonitePath>
+		
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Reference Include="ResoniteModLoader">
+			<HintPath>$(ResonitePath)Libraries\ResoniteModLoader.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="HarmonyLib">
+			<HintPath>$(ResonitePath)rml_libs\0Harmony.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="FrooxEngine">
+			<HintPath>$(ResonitePath)Resonite_Data\Managed\FrooxEngine.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="Elements.Core">
+			<HintPath>$(ResonitePath)Resonite_Data\Managed\Elements.Core.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="Elements.Assets">
+			<HintPath>$(ResonitePath)Resonite_Data\Managed\Elements.Assets.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+			<Reference Include="FrooxEngine.Store">
+			<HintPath>$(ResonitePath)Resonite_Data\Managed\FrooxEngine.Store.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="SkyFrost.Base">
+			<HintPath>$(ResonitePath)Resonite_Data\Managed\SkyFrost.Base.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="SkyFrost.Base.Models">
+			<HintPath>$(ResonitePath)Resonite_Data\Managed\SkyFrost.Base.Models.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="System.IO.Compression.FileSystem" />
+	</ItemGroup>
+	<!--Check if all these imports are needed?-->
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToMods)'=='true'">
+		<Message Text="Attempting to copy $(TargetFileName) to $(ResonitePath)rml_mods" Importance="high" />
+		<Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="$(ResonitePath)rml_mods" ContinueOnError="true" />
+	</Target>
 </Project>
