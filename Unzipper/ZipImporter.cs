@@ -16,14 +16,15 @@ namespace ZipImporter;
 
 public class ZipImporter : ResoniteMod
 {
-    public override string Name => "ZipImporter";
+	internal const string VERSION_CONSTANT = "2.1.1";
+	public override string Name => "ZipImporter";
     public override string Author => "dfgHiatus";
-    public override string Version => "2.1.0";
-    public override string Link => "https://github.com/dfgHiatus/ZipImporter/";
+	public override string Version => VERSION_CONSTANT;
+	public override string Link => "https://github.com/dfgHiatus/ZipImporter/";
 
     [AutoRegisterConfigKey]
     private static readonly ModConfigurationKey<bool> enabled =
-        new("importAsRawFiles", "Enable", () => true);
+        new("importAsRawFiles", "Enable Importing Zip Files (disable to import as raw file)", () => true);
     [AutoRegisterConfigKey]
     private static readonly ModConfigurationKey<bool> importText =
         new("importText", "Import Text", () => true);
@@ -50,7 +51,7 @@ public class ZipImporter : ResoniteMod
         new("importVideo", "Import Videos", () => true);
     [AutoRegisterConfigKey]
     public static readonly ModConfigurationKey<bool> importUnknown =
-        new("importUnknown", "Import Videos", () => true);
+        new("importUnknown", "Import Unknown", () => true);
 
     internal const string ZIP_FILE_EXTENSION = ".zip";
 
