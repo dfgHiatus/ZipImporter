@@ -24,7 +24,7 @@ public class ZipImporter : ResoniteMod
 
     [AutoRegisterConfigKey]
     private static readonly ModConfigurationKey<bool> enabled =
-        new("importAsRawFiles", "Enable", () => true);
+        new("importAsRawFiles", "Enable Importing Zip Files (disable to import as raw file)", () => true);
     [AutoRegisterConfigKey]
     private static readonly ModConfigurationKey<bool> importText =
         new("importText", "Import Text", () => true);
