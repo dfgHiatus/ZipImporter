@@ -51,7 +51,7 @@ public class ZipImporter : ResoniteMod
         new("importVideo", "Import Videos", () => true);
     [AutoRegisterConfigKey]
     public static readonly ModConfigurationKey<bool> importUnknown =
-        new("importUnknown", "Import Videos", () => true);
+        new("importUnknown", "Import Unknown", () => true);
 
     internal const string ZIP_FILE_EXTENSION = ".zip";
 
