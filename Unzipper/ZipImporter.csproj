@@ -56,7 +56,6 @@
 		</Reference>
 		<Reference Include="System.IO.Compression.FileSystem" />
 	</ItemGroup>
-	<!--Check if all these imports are needed?-->
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToMods)'=='true'">
 		<Message Text="Attempting to copy $(TargetFileName) to $(ResonitePath)rml_mods" Importance="high" />
