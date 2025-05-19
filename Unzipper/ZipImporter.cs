@@ -16,7 +16,7 @@ namespace ZipImporter;
 
 public class ZipImporter : ResoniteMod
 {
-	internal const string VERSION_CONSTANT = "2.1.1";
+	internal const string VERSION_CONSTANT = "2.1.2";
 	public override string Name => "ZipImporter";
     public override string Author => "dfgHiatus";
 	public override string Version => VERSION_CONSTANT;
@@ -117,17 +117,28 @@ public class ZipImporter : ResoniteMod
 
 
     [HarmonyPatch(typeof(UniversalImporter), "Import", typeof(AssetClass), typeof(IEnumerable<string>),
-        typeof(World), typeof(float3), typeof(floatQ), typeof(bool))]
+    typeof(World), typeof(float3), typeof(floatQ), typeof(bool))]
     public class UniversalImporterPatch
     {
         static bool Prefix(IEnumerable<string> files)
         {
             if (!config.GetValue(enabled)) return true;
 
+            // Skip the patch for URLs (like YouTube links)
+            if (files.Any(f => f.StartsWith("http://") || f.StartsWith("https://")))
+                return true;
+
             List<string> hasZippedFile = new();
             List<string> notZippedFile = new();
             foreach (var file in files)
             {
+                // Skip non-file entries
+                if (string.IsNullOrEmpty(file) || !File.Exists(file))
+                {
+                    notZippedFile.Add(file);
+                    continue;
+                }
+
                 var extension = Path.GetExtension(file).ToLower();
                 if (extension == ZIP_FILE_EXTENSION)
                     hasZippedFile.Add(file);
@@ -135,38 +146,48 @@ public class ZipImporter : ResoniteMod
                     notZippedFile.Add(file);
             }
 
-            var root = Engine.Current.WorldManager.FocusedWorld.RootSlot;
-            root.StartGlobalTask(async delegate
+            // Process zip files if any were found
+            if (hasZippedFile.Count > 0)
             {
-                ProgressBarInterface pbi = await root.World.
-                    AddSlot("Import Indicator").
-                    SpawnEntity<ProgressBarInterface, LegacySegmentCircleProgress>
-                    (FavoriteEntity.ProgressBar);
-                pbi.Slot.PositionInFrontOfUser();
-                pbi.Initialize(canBeHidden: true);
-                pbi.UpdateProgress(0.0f, "Detected Zip(s)! Starting extract...", string.Empty);
-
-                await default(ToBackground);
-                List<string> allDirectoriesToBatchImport = new();
-                foreach (var dir in await ExtractZippedFile(hasZippedFile.ToArray(), pbi))
-                    allDirectoriesToBatchImport.AddRange(Directory.GetFiles(dir, "*", SearchOption.AllDirectories)
-                        .Where(ShouldImportFile).ToArray());
-                await default(ToWorld);
-
-                pbi.ProgressDone("Extract complete!");
-                pbi.Slot.RunInSeconds(2.5f, delegate
+                var root = Engine.Current.WorldManager.FocusedWorld.RootSlot;
+                root.StartGlobalTask(async delegate
                 {
-                    pbi.Slot.Destroy();
+                    ProgressBarInterface pbi = await root.World.
+                        AddSlot("Import Indicator").
+                        SpawnEntity<ProgressBarInterface, LegacySegmentCircleProgress>
+                        (FavoriteEntity.ProgressBar);
+                    pbi.Slot.PositionInFrontOfUser();
+                    pbi.Initialize(canBeHidden: true);
+                    pbi.UpdateProgress(0.0f, "Detected Zip(s)! Starting extract...", string.Empty);
+
+                    await default(ToBackground);
+                    List<string> allDirectoriesToBatchImport = new();
+                    foreach (var dir in await ExtractZippedFile(hasZippedFile.ToArray(), pbi))
+                        allDirectoriesToBatchImport.AddRange(Directory.GetFiles(dir, "*", SearchOption.AllDirectories)
+                            .Where(ShouldImportFile).ToArray());
+                    await default(ToWorld);
+
+                    pbi.ProgressDone("Extract complete!");
+                    pbi.Slot.RunInSeconds(2.5f, delegate
+                    {
+                        pbi.Slot.Destroy();
+                    });
+
+                    var slot = Engine.Current.WorldManager.FocusedWorld.AddSlot("Zip File import");
+                    slot.PositionInFrontOfUser();
+                    BatchFolderImporter.BatchImport(slot, allDirectoriesToBatchImport);
                 });
+            }
 
-                var slot = Engine.Current.WorldManager.FocusedWorld.AddSlot("Zip File import");
-                slot.PositionInFrontOfUser();
-                BatchFolderImporter.BatchImport(slot, allDirectoriesToBatchImport);
-            });
+            // Always pass non-zip files to the original importer
+            if (notZippedFile.Count > 0)
+            {
+                files = notZippedFile.ToArray();
+                return true;
+            }
 
-            if (notZippedFile.Count <= 0) return false;
-            files = notZippedFile.ToArray();
-            return true;
+            // Only return false if we've handled zip files and there's nothing else to process
+            return notZippedFile.Count > 0;
         }
     }
 
